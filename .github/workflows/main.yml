@@ -25,7 +25,6 @@ jobs:
           override: true
       - name: Build and package Kotlin code
         run: |
-          cd ../
           kotlinc main.kt -include-runtime -d main.jar
 
       - name: Deploy Lambda function
