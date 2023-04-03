@@ -1,0 +1,36 @@
+name: Deploy Lambda function
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: sa-east-1
+
+      - name: Build and package Kotlin code
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: "1.4.31" # replace with desired version
+          override: true
+        run: |
+          cd source
+          kotlinc main.kt -include-runtime -d main.jar
+
+      - name: Deploy Lambda function
+        uses: aws-actions/aws-cli@v1
+        with:
+          args: >
+            lambda update-function-code
+            --function-name arn:aws:lambda:sa-east-1:531622347108:function:cp-web-crawler
+            --zip-file fileb://source/main.jar
