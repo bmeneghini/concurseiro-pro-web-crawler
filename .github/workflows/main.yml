@@ -18,11 +18,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: sa-east-1
 
-      - name: Build and package Kotlin code
+      - name: Uses Kotlin
         uses: actions-rs/toolchain@v1
         with:
           toolchain: "1.4.31" # replace with desired version
           override: true
+      - name: Build and package Kotlin code
         run: |
           cd source
           kotlinc main.kt -include-runtime -d main.jar
