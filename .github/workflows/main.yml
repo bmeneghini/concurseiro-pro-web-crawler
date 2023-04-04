@@ -1,36 +1,26 @@
-name: Deploy Lambda function
+name: Deploy to Lambda
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: sa-east-1
-
-      - name: Uses Kotlin
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: "1.4.31" # replace with desired version
-          override: true
-      - name: Build and package Kotlin code
-        run: |
-          kotlinc main.kt -include-runtime -d main.jar
-
-      - name: Deploy Lambda function
-        uses: aws-actions/aws-cli@v1
-        with:
-          args: >
-            lambda update-function-code
-            --function-name arn:aws:lambda:sa-east-1:531622347108:function:cp-web-crawler
-            --zip-file fileb://source/main.jar
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: pip install -r requirements.txt -t .
+    - name: Deploy to Lambda
+      uses: appleboy/aws-lambda-deploy@v2.0.1
+      with:
+        access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        region: ${{ secrets.AWS_REGION }}
+        function_name: cp-web-crawler
+        zip_file: index.py
