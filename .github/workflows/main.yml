@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: pip install -r requirements.txt -t .
     - name: Deploy to Lambda
-      uses: appleboy/aws-lambda-deploy@v2.0.1
+      uses: appleboy/aws-lambda-deploy@v0.1.9
       with:
         access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
