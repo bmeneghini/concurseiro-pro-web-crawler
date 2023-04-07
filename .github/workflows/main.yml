@@ -15,9 +15,11 @@ jobs:
       with:
         python-version: 3.9
     - name: Install dependencies
-      run: pip install -r requirements.txt -t .
-    - name: Zip file
-      run: zip index.zip index.py
+      run: pip install -r requirements.txt -t ./package requests
+    - name: Create deployment package
+      run: cd package | zip -r ../index.zip .
+    - name: Add module to file root of zip file
+      run: cd .. | zip index.zip index.py
     - name: Deploy to Lambda
       uses: appleboy/lambda-action@v0.1.9
       with:
