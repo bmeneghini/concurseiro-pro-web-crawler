@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def lambda_handler(event, context):
+def lambda_handler():
     url = "https://www.princexml.com/samples/"
     html_content = get_html_content(url)
     links = extract_links(html_content)
@@ -37,14 +37,25 @@ def filter_pdf_links(links):
 def download_pdf_files(pdf_links):
     s3 = boto3.client("s3")
     bucket_name = "cp-nomination-files"
-    existing_files = [obj["Key"] for obj in s3.list_objects(Bucket=bucket_name)["Contents"]]
-    for link in pdf_links:
-        filename = link.split("/")[-1]
-        if filename in existing_files:
-            print(f"File {filename} already exists in S3, skipping download.")
-            continue
-        response = requests.get(link)
-        response.raise_for_status()
-        metadata = {"ContentLength": str(len(response.content))}
-        s3.put_object(Bucket=bucket_name, Key=filename, Body=response.content, Metadata=metadata)
-        print(f"Downloaded and uploaded file: {filename}")
+    try:
+        response = s3.list_objects_v2(Bucket=bucket_name)
+        if "Contents" in response:
+            existing_files = [obj["Key"] for obj in response["Contents"]]
+        else:
+            existing_files = []
+        for link in pdf_links:
+            filename = link.split("/")[-1]
+            if filename in existing_files:
+                print(f"File {filename} already exists in S3, skipping download.")
+                continue
+            response = requests.get(link)
+            response.raise_for_status()
+            metadata = {"ContentLength": str(len(response.content))}
+            s3.put_object(Bucket=bucket_name, Key=filename, Body=response.content, Metadata=metadata)
+            print(f"Downloaded and uploaded file: {filename}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+if __name__ == "__main__":
+    lambda_handler()
