@@ -16,6 +16,8 @@ jobs:
         python-version: 3.9
     - name: Install dependencies
       run: pip install -r requirements.txt -t .
+    - name: Zip file
+      run: zip index.zip index.py
     - name: Deploy to Lambda
       uses: appleboy/lambda-action@v0.1.9
       with:
@@ -23,4 +25,4 @@ jobs:
         aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws_region: ${{ secrets.AWS_REGION }}
         function_name: cp-web-crawler
-        zip_file: index.py
+        zip_file: index.zip
