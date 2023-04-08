@@ -1,9 +1,11 @@
+import re
+import json
 import boto3
 import requests
 from bs4 import BeautifulSoup
 
 
-def lambda_handler():
+def lambda_handler(event, context):
     url = "https://www.princexml.com/samples/"
     html_content = get_html_content(url)
     links = extract_links(html_content)
@@ -27,11 +29,17 @@ def extract_links(html_content):
 
 
 def filter_pdf_links(links):
-    pdf_links = []
+    pdf_links = set()
+    url_pattern = re.compile(
+        r'^(https?://)?'  # scheme (optional)
+        r'(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})'  # domain name (required)
+        r'(/\S*)?'  # path and query string (optional)
+        r'$'
+    )
     for link in links:
-        if link.endswith(".pdf"):
-            pdf_links.append(link)
-    return pdf_links
+        if link.endswith(".pdf") and url_pattern.match(link):
+            pdf_links.add(link)
+    return list(pdf_links)
 
 
 def download_pdf_files(pdf_links):
@@ -57,5 +65,12 @@ def download_pdf_files(pdf_links):
         print(f"An error occurred: {e}")
 
 
+class Context:
+    def __init__(self, arn: str):
+        self.invoked_function_arn = arn
+
+
 if __name__ == "__main__":
-    lambda_handler()
+    with open("events/hw.json", 'r') as f:
+        event = json.load(f)
+        lambda_handler(event, Context("CP-WEB-CRAWLER-PROD"))
