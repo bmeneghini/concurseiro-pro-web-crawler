@@ -1,3 +1,4 @@
+import os
 import re
 import json
 import boto3
@@ -6,12 +7,17 @@ from bs4 import BeautifulSoup
 
 
 def lambda_handler(event, context):
-    url = "https://www.princexml.com/samples/"
-    html_content = get_html_content(url)
-    links = extract_links(html_content)
-    pdf_links = filter_pdf_links(links)
-    download_pdf_files(pdf_links)
-
+    urls = ["https://www.princexml.com/samples/", "https://unec.edu.az/application/uploads/2014/12/pdf-sample.pdf"]
+    pdf_links = []
+    for url in urls:
+        html_content = get_html_content(url)
+        links = extract_links(html_content)
+        pdf_links = filter_pdf_links(links)
+        download_pdf_files(pdf_links)
+    return {
+        "statusCode": 200,
+        "body": f"Process completed successfully. Fetched and uploaded {len(pdf_links)} PDF files."
+    }
 
 def get_html_content(url):
     response = requests.get(url)
@@ -44,7 +50,7 @@ def filter_pdf_links(links):
 
 def download_pdf_files(pdf_links):
     s3 = boto3.client("s3")
-    bucket_name = "cp-nomination-files"
+    bucket_name = os.environ["BUCKET_NAME"]
     try:
         response = s3.list_objects_v2(Bucket=bucket_name)
         if "Contents" in response:
